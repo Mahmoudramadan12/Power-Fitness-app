@@ -1,0 +1,5 @@
+@model Enum
+@{
+    var text = Model.ToString();
+}
+<span class="status status-@text.ToLowerInvariant()">@text</span>

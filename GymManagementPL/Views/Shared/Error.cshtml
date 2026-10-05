@@ -1,0 +1,17 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Something went wrong";
+    Layout = User.Identity?.IsAuthenticated == true ? "_Layout" : "_AuthLayout";
+}
+<div class="@(User.Identity?.IsAuthenticated == true ? "" : "auth-panel")">
+    <div class="empty card p-5 mx-auto" style="max-width:520px">
+        <i class="bi bi-bug"></i>
+        <h1 class="h4">Something went wrong</h1>
+        <p>An unexpected error occurred. It has been logged - please try again, and if it keeps happening let an administrator know.</p>
+        @if (Model.ShowRequestId)
+        {
+            <p class="small">Reference: <code>@Model.RequestId</code></p>
+        }
+        <div><a class="btn btn-primary" asp-controller="Home" asp-action="Index">Back to dashboard</a></div>
+    </div>
+</div>

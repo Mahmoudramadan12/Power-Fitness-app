@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/.vs/
+.git/
+.github/
+*.md
+GymManagement.Tests/
+GymManagementPL/MembersPictures/*
+.env

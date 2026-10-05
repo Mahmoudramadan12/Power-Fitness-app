@@ -1,0 +1,66 @@
+@model GymManagementBLL.Common.PagedList<SessionViewModel>
+@{
+    ViewData["Title"] = "Sessions";
+    var query = (SessionListQuery)ViewBag.Query;
+    var categories = (IReadOnlyList<CategorySelectViewModel>)ViewBag.Categories;
+    var tabs = new (SessionStatus? Status, string Label)[] { (SessionStatus.Upcoming, "Upcoming"), (SessionStatus.Ongoing, "Live now"), (SessionStatus.Completed, "Completed"), (null, "All") };
+}
+<div class="page-header">
+    <div><h1>Sessions</h1><p class="lead">Classes and training slots.</p></div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-calendar-plus"></i> New session</a>
+</div>
+
+<ul class="nav nav-tabs-pf mb-3" aria-label="Session status">
+    @foreach (var (status, label) in tabs)
+    {
+        <li class="nav-item"><a class="nav-link @(query.Status == status ? "active" : "")" asp-action="Index" asp-route-status="@(status?.ToString() ?? "")" asp-route-categoryId="@query.CategoryId" asp-route-search="@query.Search">@label</a></li>
+    }
+</ul>
+
+<div class="card table-card">
+    <form method="get" class="filter-bar" role="search">
+        <input type="hidden" name="status" value="@query.Status" />
+        <div class="search"><i class="bi bi-search"></i><input type="search" name="search" value="@query.Search" class="form-control" placeholder="Search description or trainer" aria-label="Search sessions" /></div>
+        <select name="categoryId" class="form-select w-auto" aria-label="Category" data-autosubmit>
+            <option value="">All categories</option>
+            @foreach (var c in categories) { <option value="@c.Id" selected="@(query.CategoryId == c.Id)">@c.CategoryName</option> }
+        </select>
+        <button class="btn btn-soft" type="submit">Apply</button>
+    </form>
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty"><i class="bi bi-calendar-x"></i><h3>No sessions found</h3><p class="mb-0">Try another tab or filter, or schedule a new session.</p></div>
+    }
+    else
+    {
+        <div class="table-responsive"><table class="table table-hover">
+            <thead><tr><th>Session</th><th>When</th><th class="d-none d-md-table-cell">Trainer</th><th>Booked</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+            <tbody>
+            @foreach (var s in Model.Items)
+            {
+                <tr>
+                    <td><div class="min-w-0"><a asp-action="Details" asp-route-id="@s.Id" class="fw-semibold text-decoration-none text-reset">@s.CategoryName</a><small class="d-block text-muted text-truncate" style="max-width:260px">@s.Description</small></div></td>
+                    <td class="tabular">@s.StartDate.ToString("ddd d MMM") <small class="d-block text-muted">@s.StartDate.ToString("h:mm tt") – @s.EndDate.ToString("h:mm tt")</small></td>
+                    <td class="d-none d-md-table-cell">@s.TrainerName</td>
+                    <td style="min-width:130px"><div class="meter @(s.IsFull ? "full" : s.FillPercent >= 75 ? "high" : "")" role="progressbar" aria-valuenow="@s.BookedCount" aria-valuemin="0" aria-valuemax="@s.Capacity" aria-label="Booked seats"><span style="width:@s.FillPercent%"></span></div><small class="text-muted tabular">@s.BookedCount / @s.Capacity</small></td>
+                    <td><partial name="_StatusBadge" model="s.Status" /></td>
+                    <td class="row-actions">
+                        <a class="btn btn-icon btn-outline-secondary" asp-controller="Booking" asp-action="Roster" asp-route-id="@s.Id" title="Roster" aria-label="Open roster"><i class="bi bi-people"></i></a>
+                        @if (s.Status == SessionStatus.Upcoming && s.BookedCount == 0)
+                        {
+                            <a class="btn btn-icon btn-outline-secondary" asp-action="Edit" asp-route-id="@s.Id" title="Edit" aria-label="Edit session"><i class="bi bi-pencil"></i></a>
+                        }
+                        @if (s.Status != SessionStatus.Ongoing && s.BookedCount == 0)
+                        {
+                            <form asp-action="Delete" asp-route-id="@s.Id" method="post" class="d-inline" data-confirm="Delete this @s.CategoryName session on @s.StartDate.ToString("d MMM, h:mm tt")?" data-confirm-title="Delete session?" data-confirm-ok="Delete">
+                                <button type="submit" class="btn btn-icon btn-outline-danger" title="Delete" aria-label="Delete session" data-no-loading><i class="bi bi-trash"></i></button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody></table></div>
+    }
+    <partial name="_Pager" model="Model" />
+</div>

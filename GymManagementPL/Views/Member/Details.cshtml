@@ -1,0 +1,102 @@
+@model MemberDetailsViewModel
+@{
+    ViewData["Title"] = Model.Name;
+    var current = Model.CurrentMembership;
+}
+<div class="page-header">
+    <div>
+        <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Members</a></li><li class="breadcrumb-item active">@Model.Name</li></ol></nav>
+        <div class="profile-head">
+            <partial name="_Avatar" model='new AvatarModel(Model.Name, Model.Photo is null ? null : Url.Action("Picture", "Member", new { id = Model.Id }), "xl")' />
+            <div>
+                <h1>@Model.Name</h1>
+                <p class="lead mb-2">Member since @Model.JoinDate.ToString("MMMM yyyy") · @Model.Age years old</p>
+                @if (current is not null) { <span class="status status-active">@current.PlanName · @current.RemainingDays days left</span> }
+                else { <span class="status status-expired">No active membership</span> }
+            </div>
+        </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-primary" asp-controller="Membership" asp-action="Create" asp-route-memberId="@Model.Id"><i class="bi bi-plus-lg"></i> Add membership</a>
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id"><i class="bi bi-pencil"></i> Edit</a>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" data-confirm="This permanently deletes @Model.Name along with their memberships, bookings and health record. This can't be undone." data-confirm-title="Delete member?" data-confirm-ok="Delete member">
+            <button type="submit" class="btn btn-outline-danger" data-no-loading><i class="bi bi-trash"></i> Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header">Details</div>
+            <div class="card-body">
+                <dl class="kv">
+                    <dt>Email</dt><dd class="text-break">@Model.Email</dd>
+                    <dt>Phone</dt><dd class="tabular">@Model.Phone</dd>
+                    <dt>Gender</dt><dd>@Model.Gender</dd>
+                    <dt>Date of birth</dt><dd>@Model.DateOfBirth.ToString("d MMM yyyy")</dd>
+                    <dt>Address</dt><dd>@Model.Address</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">Health record <a class="btn btn-sm btn-soft" asp-action="HealthRecord" asp-route-id="@Model.Id">@(Model.HealthRecord is null ? "Add" : "Edit")</a></div>
+            <div class="card-body">
+                @if (Model.HealthRecord is { } h)
+                {
+                    <dl class="kv">
+                        <dt>Height</dt><dd>@h.Height cm</dd>
+                        <dt>Weight</dt><dd>@h.Weight kg</dd>
+                        @if (h.Bmi is { } bmi) { <dt>BMI</dt><dd>@bmi</dd> }
+                        <dt>Blood type</dt><dd><span class="chip">@h.BloodType</span></dd>
+                        <dt>Notes</dt><dd>@(string.IsNullOrWhiteSpace(h.Note) ? "—" : h.Note)</dd>
+                    </dl>
+                }
+                else { <p class="text-muted mb-0">No health record yet.</p> }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header">Membership history</div>
+            @if (Model.MembershipHistory.Count == 0)
+            {
+                <div class="empty"><i class="bi bi-card-checklist"></i><h3>No memberships yet</h3></div>
+            }
+            else
+            {
+                <div class="table-responsive"><table class="table">
+                    <thead><tr><th>Plan</th><th>Period</th><th class="text-end">Paid</th><th>Status</th></tr></thead>
+                    <tbody>
+                    @foreach (var m in Model.MembershipHistory)
+                    {
+                        <tr><td class="fw-semibold">@m.PlanName</td><td class="tabular">@m.StartDate.ToString("d MMM yy") – @m.EndDate.ToString("d MMM yy")</td><td class="text-end tabular">@m.PricePaid.ToString("N0")</td><td><partial name="_StatusBadge" model="m.Status" /></td></tr>
+                    }
+                    </tbody></table></div>
+            }
+        </div>
+        <div class="card">
+            <div class="card-header">Recent sessions</div>
+            @if (Model.RecentBookings.Count == 0)
+            {
+                <div class="empty"><i class="bi bi-calendar-x"></i><h3>No bookings yet</h3></div>
+            }
+            else
+            {
+                <div class="table-responsive"><table class="table">
+                    <thead><tr><th>Session</th><th>When</th><th>Attendance</th></tr></thead>
+                    <tbody>
+                    @foreach (var b in Model.RecentBookings)
+                    {
+                        <tr>
+                            <td><a asp-controller="Booking" asp-action="Roster" asp-route-id="@b.SessionId" class="fw-semibold text-decoration-none">@b.CategoryName</a><small class="d-block text-muted">@b.TrainerName</small></td>
+                            <td class="tabular">@b.StartDate.ToString("ddd d MMM, h:mm tt")</td>
+                            <td>@if (b.Status == SessionStatus.Completed) { if (b.IsAttended) { <span class="status status-active">Attended</span> } else { <span class="status status-danger">Missed</span> } } else { <partial name="_StatusBadge" model="b.Status" /> }</td>
+                        </tr>
+                    }
+                    </tbody></table></div>
+            }
+        </div>
+    </div>
+</div>

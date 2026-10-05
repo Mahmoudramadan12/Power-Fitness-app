@@ -1,0 +1,36 @@
+@model CreateMembershipViewModel
+@{
+    ViewData["Title"] = "New membership";
+    var members = (IReadOnlyList<MemberSelectListViewModel>)ViewBag.Members;
+    var plans = (IReadOnlyList<PlanSelectListViewModel>)ViewBag.Plans;
+}
+<div class="page-header"><div>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Memberships</a></li><li class="breadcrumb-item active">New</li></ol></nav>
+    <h1>New membership</h1></div></div>
+
+<form asp-action="Create" method="post" novalidate>
+    <div class="card form-narrow"><div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+        <div class="row g-3">
+            <div class="col-12"><label asp-for="MemberId" class="form-label"></label>
+                <select asp-for="MemberId" class="form-select"><option value="">Select a member…</option>@foreach (var m in members) { <option value="@m.Id" selected="@(Model.MemberId == m.Id)">@m.Name · @m.Phone</option> }</select>
+                <span asp-validation-for="MemberId"></span></div>
+            <div class="col-md-7"><label asp-for="PlanId" class="form-label"></label>
+                <select asp-for="PlanId" class="form-select"><option value="">Select a plan…</option>@foreach (var p in plans) { <option value="@p.Id" data-days="@p.DurationDays" data-price="@p.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected="@(Model.PlanId == p.Id)">@p.Name · @p.DurationDays days · @p.Price.ToString("N0") EGP</option> }</select>
+                <span asp-validation-for="PlanId"></span></div>
+            <div class="col-md-5"><label asp-for="StartDate" class="form-label"></label><input asp-for="StartDate" type="date" class="form-control" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" /><span asp-validation-for="StartDate"></span></div>
+        </div>
+        <div id="planPreview" class="alert alert-secondary mt-4 mb-0" hidden>
+            <div class="row text-center g-2">
+                <div class="col"><div class="small text-muted">Price</div><div class="fw-bold tabular" id="previewPrice"></div></div>
+                <div class="col"><div class="small text-muted">Length</div><div class="fw-bold" id="previewDays"></div></div>
+                <div class="col"><div class="small text-muted">Last day</div><div class="fw-bold" id="previewEnd"></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer bg-transparent p-3 d-flex gap-2"><button type="submit" class="btn btn-primary">Create membership</button><a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></div></div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/pages/membership-form.js" asp-append-version="true"></script>
+}

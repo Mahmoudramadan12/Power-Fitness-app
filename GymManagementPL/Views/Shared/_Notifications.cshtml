@@ -1,0 +1,24 @@
+@{
+    var success = TempData[FlashExtensions.SuccessKey] as string;
+    var error = TempData[FlashExtensions.ErrorKey] as string;
+}
+<div class="toast-container position-fixed top-0 end-0 p-3" aria-live="polite" aria-atomic="true">
+    @if (!string.IsNullOrEmpty(success))
+    {
+        <div class="toast align-items-center text-bg-success" role="status" data-flash="success">
+            <div class="d-flex">
+                <div class="toast-body"><i class="bi bi-check-circle-fill me-2"></i>@success</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="toast align-items-center text-bg-danger" role="alert" data-flash="error">
+            <div class="d-flex">
+                <div class="toast-body"><i class="bi bi-exclamation-triangle-fill me-2"></i>@error</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+</div>

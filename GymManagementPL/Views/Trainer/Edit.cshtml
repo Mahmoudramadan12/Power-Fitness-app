@@ -1,0 +1,23 @@
+@model TrainerToUpdateViewModel
+@{ ViewData["Title"] = "Edit trainer"; }
+<div class="page-header"><div>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Trainers</a></li><li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a></li><li class="breadcrumb-item active">Edit</li></ol></nav>
+    <h1>Edit trainer</h1></div></div>
+
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
+    <input type="hidden" asp-for="Id" />
+    <div class="card form-narrow"><div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+        <div class="row g-3">
+            <div class="col-md-6"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name"></span></div>
+            <div class="col-md-6"><label asp-for="Specialty" class="form-label"></label><select asp-for="Specialty" class="form-select" asp-items="Html.GetEnumSelectList<Specialties>()"></select><span asp-validation-for="Specialty"></span></div>
+            <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" type="email" class="form-control" /><span asp-validation-for="Email"></span></div>
+            <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" type="tel" inputmode="numeric" maxlength="11" class="form-control" /><span asp-validation-for="Phone"></span></div>
+            <div class="col-md-3"><label asp-for="BuildingNumber" class="form-label"></label><input asp-for="BuildingNumber" type="number" min="1" class="form-control" /><span asp-validation-for="BuildingNumber"></span></div>
+            <div class="col-md-5"><label asp-for="Street" class="form-label"></label><input asp-for="Street" class="form-control" /><span asp-validation-for="Street"></span></div>
+            <div class="col-md-4"><label asp-for="City" class="form-label"></label><input asp-for="City" class="form-control" /><span asp-validation-for="City"></span></div>
+        </div>
+    </div>
+    <div class="card-footer bg-transparent p-3 d-flex gap-2"><button type="submit" class="btn btn-primary">Save changes</button><a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancel</a></div></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

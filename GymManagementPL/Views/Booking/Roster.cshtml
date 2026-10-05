@@ -1,0 +1,94 @@
+@model SessionRosterViewModel
+@{
+    ViewData["Title"] = $"{Model.Session.CategoryName} roster";
+    var s = Model.Session;
+}
+<div class="page-header">
+    <div>
+        <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Bookings</a></li><li class="breadcrumb-item active">Roster</li></ol></nav>
+        <h1>@s.CategoryName <partial name="_StatusBadge" model="s.Status" /></h1>
+        <p class="lead">@s.StartDate.ToString("dddd, d MMM · h:mm tt") – @s.EndDate.ToString("h:mm tt") · with @s.TrainerName</p>
+    </div>
+    <div class="text-end" style="min-width:200px">
+        <div class="meter @(s.IsFull ? "full" : s.FillPercent >= 75 ? "high" : "")" role="progressbar" aria-valuenow="@s.BookedCount" aria-valuemin="0" aria-valuemax="@s.Capacity" aria-label="Booked seats"><span style="width:@s.FillPercent%"></span></div>
+        <small class="text-muted tabular">@s.BookedCount of @s.Capacity booked</small>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card table-card">
+            <div class="card-header">Booked members</div>
+            @if (Model.Members.Count == 0)
+            {
+                <div class="empty"><i class="bi bi-people"></i><h3>Nobody booked yet</h3></div>
+            }
+            else
+            {
+                <div class="table-responsive"><table class="table">
+                    <thead><tr><th>Member</th><th>Booked</th><th>Attendance</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+                    <tbody>
+                    @foreach (var m in Model.Members)
+                    {
+                        <tr>
+                            <td><div class="cell-person"><partial name="_Avatar" model='new AvatarModel(m.MemberName, null, "sm")' /><span class="fw-semibold">@m.MemberName</span></div></td>
+                            <td class="tabular text-muted">@m.BookedAt.ToString("d MMM, h:mm tt")</td>
+                            <td>
+                                @if (m.IsAttended) { <span class="status status-active">Attended</span> }
+                                else if (s.Status == SessionStatus.Completed) { <span class="status status-danger">Missed</span> }
+                                else { <span class="status status-expired">Pending</span> }
+                            </td>
+                            <td class="row-actions">
+                                @if (Model.CanMarkAttendance && !m.IsAttended)
+                                {
+                                    <form asp-controller="Booking" asp-action="Attended" method="post" class="d-inline">
+                                        <input type="hidden" name="memberId" value="@m.MemberId" /><input type="hidden" name="sessionId" value="@s.Id" />
+                                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check2"></i> Mark attended</button>
+                                    </form>
+                                }
+                                @if (Model.CanCancel)
+                                {
+                                    <form asp-controller="Booking" asp-action="Cancel" method="post" class="d-inline" data-confirm="Cancel @m.MemberName's booking?" data-confirm-title="Cancel booking?" data-confirm-ok="Cancel booking">
+                                        <input type="hidden" name="memberId" value="@m.MemberId" /><input type="hidden" name="sessionId" value="@s.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" data-no-loading>Cancel</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody></table></div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Add a member</div>
+            <div class="card-body">
+                @if (Model.CanBook)
+                {
+                    @if (Model.EligibleMembers.Count == 0)
+                    {
+                        <p class="text-muted mb-0">No eligible members. Members need a membership that covers @s.StartDate.ToString("d MMM") and must not already be booked.</p>
+                    }
+                    else
+                    {
+                        <form asp-controller="Booking" asp-action="Create" method="post">
+                            <input type="hidden" name="sessionId" value="@s.Id" />
+                            <label for="memberId" class="form-label">Member</label>
+                            <select id="memberId" name="memberId" class="form-select mb-3" required>
+                                <option value="">Select a member…</option>
+                                @foreach (var m in Model.EligibleMembers) { <option value="@m.Id">@m.Name · @m.Phone</option> }
+                            </select>
+                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i> Book into session</button>
+                            <div class="form-text mt-2">Only members with a valid membership on the session date are listed.</div>
+                        </form>
+                    }
+                }
+                else if (s.Status == SessionStatus.Upcoming) { <p class="text-muted mb-0"><i class="bi bi-exclamation-circle"></i> This session is full.</p> }
+                else if (s.Status == SessionStatus.Ongoing) { <p class="text-muted mb-0">Booking is closed - the session is in progress. Use <b>Mark attended</b> as members arrive.</p> }
+                else { <p class="text-muted mb-0">This session has finished.</p> }
+            </div>
+        </div>
+    </div>
+</div>

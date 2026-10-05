@@ -1,0 +1,39 @@
+# Local/demo stack: SQL Server + the app.   docker compose --env-file .env up --build
+# Copy .env.example to .env and set real values first.
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD:?set SQL_SA_PASSWORD in .env}
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=db;Database=PowerFitnessGym;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True"
+      Seed__SuperAdmin__Email: ${SUPERADMIN_EMAIL:?set SUPERADMIN_EMAIL in .env}
+      Seed__SuperAdmin__Password: ${SUPERADMIN_PASSWORD:?set SUPERADMIN_PASSWORD in .env}
+      Gym__Name: ${GYM_NAME:-Power Fitness}
+      Gym__TimeZone: ${GYM_TIMEZONE:-Africa/Cairo}
+    volumes:
+      - photos:/app/MembersPictures
+      - keys:/keys
+
+volumes:
+  sqldata:
+  photos:
+  keys:

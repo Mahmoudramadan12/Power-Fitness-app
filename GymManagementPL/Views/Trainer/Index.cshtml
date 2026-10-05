@@ -1,0 +1,47 @@
+@model GymManagementBLL.Common.PagedList<TrainerViewModel>
+@{
+    ViewData["Title"] = "Trainers";
+    var query = (TrainerListQuery)ViewBag.Query;
+}
+<div class="page-header">
+    <div><h1>Trainers</h1><p class="lead">Your coaching team.</p></div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-person-plus"></i> Add trainer</a>
+</div>
+
+<div class="card table-card">
+    <form method="get" class="filter-bar" role="search">
+        <div class="search"><i class="bi bi-search"></i><input type="search" name="search" value="@query.Search" class="form-control" placeholder="Search name, email or phone" aria-label="Search trainers" /></div>
+        <select name="specialty" class="form-select w-auto" aria-label="Specialty" data-autosubmit>
+            <option value="">All specialties</option>
+            @foreach (var s in Enum.GetValues<Specialties>()) { <option value="@s" selected="@(query.Specialty == s)">@EnumDisplay.Name(s)</option> }
+        </select>
+        <button class="btn btn-soft" type="submit">Apply</button>
+        @if (!string.IsNullOrEmpty(query.Search) || query.Specialty is not null) { <a class="btn btn-link" asp-action="Index">Clear</a> }
+    </form>
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty"><i class="bi bi-award"></i><h3>No trainers found</h3></div>
+    }
+    else
+    {
+        <div class="table-responsive"><table class="table table-hover">
+            <thead><tr><th>Trainer</th><th>Specialty</th><th>Phone</th><th class="d-none d-md-table-cell">Hired</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+            <tbody>
+            @foreach (var t in Model.Items)
+            {
+                <tr>
+                    <td><div class="cell-person"><partial name="_Avatar" model="new AvatarModel(t.Name)" /><div class="min-w-0"><a asp-action="Details" asp-route-id="@t.Id">@t.Name</a><small>@t.Email</small></div></div></td>
+                    <td><span class="chip">@t.SpecialtyName</span></td>
+                    <td class="tabular">@t.Phone</td>
+                    <td class="d-none d-md-table-cell">@t.HireDate.ToString("d MMM yyyy")</td>
+                    <td class="row-actions">
+                        <a class="btn btn-icon btn-outline-secondary" asp-action="Details" asp-route-id="@t.Id" title="View" aria-label="View @t.Name"><i class="bi bi-eye"></i></a>
+                        <a class="btn btn-icon btn-outline-secondary" asp-action="Edit" asp-route-id="@t.Id" title="Edit" aria-label="Edit @t.Name"><i class="bi bi-pencil"></i></a>
+                    </td>
+                </tr>
+            }
+            </tbody></table></div>
+    }
+    <partial name="_Pager" model="Model" />
+</div>

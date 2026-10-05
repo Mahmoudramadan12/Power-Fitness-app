@@ -1,0 +1,56 @@
+@model CreateMemberViewModel
+@{ ViewData["Title"] = "Add member"; }
+
+<div class="page-header">
+    <div>
+        <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Members</a></li><li class="breadcrumb-item active">New</li></ol></nav>
+        <h1>Add member</h1>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
+    <div class="card form-narrow"><div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+        <div class="form-section">Profile</div>
+        <div class="d-flex gap-3 align-items-center mb-3">
+            <span id="photoPreview" class="avatar avatar-lg av-0"><i class="bi bi-camera"></i></span>
+            <div class="flex-grow-1">
+                <label asp-for="PhotoFile" class="form-label"></label>
+                <input asp-for="PhotoFile" type="file" class="form-control" accept="image/jpeg,image/png" data-preview="#photoPreview" />
+                <span asp-validation-for="PhotoFile"></span>
+                <div class="form-text">JPG or PNG, up to 5 MB.</div>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" autocomplete="off" /><span asp-validation-for="Name"></span></div>
+            <div class="col-md-6"><label asp-for="Gender" class="form-label"></label><select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<Gender>()"><option value="">Select…</option></select><span asp-validation-for="Gender"></span></div>
+            <div class="col-md-6"><label asp-for="DateOfBirth" class="form-label"></label><input asp-for="DateOfBirth" type="date" class="form-control" /><span asp-validation-for="DateOfBirth"></span></div>
+        </div>
+
+        <div class="form-section">Contact</div>
+        <div class="row g-3">
+            <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" type="email" class="form-control" autocomplete="off" /><span asp-validation-for="Email"></span></div>
+            <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" type="tel" inputmode="numeric" maxlength="11" class="form-control" placeholder="01XXXXXXXXX" /><span asp-validation-for="Phone"></span></div>
+            <div class="col-md-3"><label asp-for="BuildingNumber" class="form-label"></label><input asp-for="BuildingNumber" type="number" min="1" class="form-control" /><span asp-validation-for="BuildingNumber"></span></div>
+            <div class="col-md-5"><label asp-for="Street" class="form-label"></label><input asp-for="Street" class="form-control" /><span asp-validation-for="Street"></span></div>
+            <div class="col-md-4"><label asp-for="City" class="form-label"></label><input asp-for="City" class="form-control" /><span asp-validation-for="City"></span></div>
+        </div>
+
+        <div class="form-section">Health record</div>
+        <div class="row g-3">
+            <div class="col-md-4"><label asp-for="HealthRecordViewModel.Height" class="form-label"></label><input asp-for="HealthRecordViewModel.Height" type="number" step="0.1" class="form-control" /><span asp-validation-for="HealthRecordViewModel.Height"></span></div>
+            <div class="col-md-4"><label asp-for="HealthRecordViewModel.Weight" class="form-label"></label><input asp-for="HealthRecordViewModel.Weight" type="number" step="0.1" class="form-control" /><span asp-validation-for="HealthRecordViewModel.Weight"></span></div>
+            <div class="col-md-4"><label asp-for="HealthRecordViewModel.BloodType" class="form-label"></label>
+                <select asp-for="HealthRecordViewModel.BloodType" class="form-select"><option value="">Select…</option>@foreach (var b in new[] { "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-" }) { <option value="@b" selected="@(Model.HealthRecordViewModel.BloodType == b)">@b</option> }</select>
+                <span asp-validation-for="HealthRecordViewModel.BloodType"></span></div>
+            <div class="col-12"><label asp-for="HealthRecordViewModel.Note" class="form-label"></label><textarea asp-for="HealthRecordViewModel.Note" rows="2" class="form-control" placeholder="Injuries, allergies, anything a trainer should know"></textarea><span asp-validation-for="HealthRecordViewModel.Note"></span></div>
+        </div>
+    </div>
+    <div class="card-footer bg-transparent p-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save member</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </div></div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

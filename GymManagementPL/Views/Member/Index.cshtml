@@ -1,0 +1,62 @@
+@model GymManagementBLL.Common.PagedList<MemberViewModel>
+@{
+    ViewData["Title"] = "Members";
+    var query = (ListQuery)ViewBag.Query;
+}
+<div class="page-header">
+    <div><h1>Members</h1><p class="lead">Everyone who trains with you.</p></div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-person-plus"></i> Add member</a>
+</div>
+
+<div class="card table-card">
+    <form method="get" class="filter-bar" role="search">
+        <div class="search"><i class="bi bi-search"></i><input type="search" name="search" value="@query.Search" class="form-control" placeholder="Search name, email or phone" aria-label="Search members" /></div>
+        <button class="btn btn-soft" type="submit">Search</button>
+        @if (!string.IsNullOrEmpty(query.Search)) { <a class="btn btn-link" asp-action="Index">Clear</a> }
+    </form>
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty"><i class="bi bi-people"></i><h3>@(string.IsNullOrEmpty(query.Search) ? "No members yet" : "No members match your search")</h3>
+            @if (string.IsNullOrEmpty(query.Search)) { <a asp-action="Create" class="btn btn-primary btn-sm mt-2">Add the first member</a> }</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>Member</th><th>Phone</th><th>Membership</th><th class="d-none d-md-table-cell">Gender</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+                <tbody>
+                @foreach (var m in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <div class="cell-person">
+                                <partial name="_Avatar" model='new AvatarModel(m.Name, m.Photo is null ? null : Url.Action("Picture", "Member", new { id = m.Id }))' />
+                                <div class="min-w-0"><a asp-action="Details" asp-route-id="@m.Id">@m.Name</a><small>@m.Email</small></div>
+                            </div>
+                        </td>
+                        <td class="tabular">@m.Phone</td>
+                        <td>
+                            @if (m.HasActiveMembership)
+                            {
+                                <span class="status status-active">@m.PlanName</span>
+                                <small class="d-block text-muted mt-1">until @m.MembershipEndDate!.Value.ToString("d MMM yyyy")</small>
+                            }
+                            else
+                            {
+                                <span class="status status-expired">No active plan</span>
+                            }
+                        </td>
+                        <td class="d-none d-md-table-cell">@m.Gender</td>
+                        <td class="row-actions">
+                            <a class="btn btn-icon btn-outline-secondary" asp-action="Details" asp-route-id="@m.Id" title="View" aria-label="View @m.Name"><i class="bi bi-eye"></i></a>
+                            <a class="btn btn-icon btn-outline-secondary" asp-action="Edit" asp-route-id="@m.Id" title="Edit" aria-label="Edit @m.Name"><i class="bi bi-pencil"></i></a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    <partial name="_Pager" model="Model" />
+</div>

@@ -1,0 +1,116 @@
+@model DashboardViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Dashboard";
+    var delta = Model.RevenueLastMonth == 0 ? (int?)null : (int)Math.Round((double)((Model.RevenueThisMonth - Model.RevenueLastMonth) / Model.RevenueLastMonth * 100));
+    var monthlyJson = JsonSerializer.Serialize(new
+    {
+        type = "bar-line",
+        labels = Model.Monthly.Select(m => m.Label),
+        bars = Model.Monthly.Select(m => m.NewMemberships),
+        line = Model.Monthly.Select(m => m.Revenue),
+        barLabel = "New memberships",
+        lineLabel = "Revenue (EGP)"
+    });
+    var planJson = JsonSerializer.Serialize(new
+    {
+        type = "doughnut",
+        labels = Model.PlanDistribution.Select(p => p.Label),
+        values = Model.PlanDistribution.Select(p => p.Value)
+    });
+}
+
+<div class="page-header">
+    <div><h1>Dashboard</h1><p class="lead">How the gym is doing right now.</p></div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary" asp-controller="Membership" asp-action="Create"><i class="bi bi-plus-lg"></i> New membership</a>
+        <a class="btn btn-outline-secondary" asp-controller="Session" asp-action="Create"><i class="bi bi-calendar-plus"></i> New session</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-xl-3"><div class="card stat-card"><div class="stat-icon"><i class="bi bi-people-fill"></i></div><div><div class="stat-value tabular">@Model.ActiveMembers</div><div class="stat-label">Active members <span class="text-muted">of @Model.TotalMembers</span></div></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card"><div class="stat-icon green"><i class="bi bi-cash-stack"></i></div><div><div class="stat-value tabular">@Model.RevenueThisMonth.ToString("N0")</div><div class="stat-label">EGP this month
+        @if (delta is { } d) { <span class="@(d >= 0 ? "text-success" : "text-danger")">@(d >= 0 ? "▲" : "▼") @Math.Abs(d)%</span> }</div></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card"><div class="stat-icon orange"><i class="bi bi-person-plus-fill"></i></div><div><div class="stat-value tabular">@Model.NewMembersThisMonth</div><div class="stat-label">New members this month</div></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card"><div class="stat-icon pink"><i class="bi bi-check2-all"></i></div><div><div class="stat-value tabular">@(Model.AttendanceRatePercent is { } pct ? $"{pct}%" : "–")</div><div class="stat-label">Attendance, last 30 days</div></div></div></div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">Memberships &amp; revenue · last 6 months</div>
+            <div class="card-body"><div class="chart-box"><canvas data-chart="@monthlyJson" role="img" aria-label="Chart of new memberships and revenue per month"></canvas></div></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">Active memberships by plan</div>
+            <div class="card-body">
+                @if (Model.PlanDistribution.Count == 0)
+                {
+                    <div class="empty py-4"><i class="bi bi-pie-chart"></i>No active memberships yet.</div>
+                }
+                else
+                {
+                    <div class="chart-box"><canvas data-chart="@planJson" role="img" aria-label="Active memberships by plan"></canvas></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Next sessions</span>
+                <span class="small text-muted">@Model.OngoingSessions live · @Model.UpcomingSessions upcoming · @Model.CompletedSessions completed</span>
+            </div>
+            @if (Model.NextSessions.Count == 0)
+            {
+                <div class="empty"><i class="bi bi-calendar-x"></i><h3>Nothing scheduled</h3><a asp-controller="Session" asp-action="Create" class="btn btn-soft btn-sm mt-2">Schedule a session</a></div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var s in Model.NextSessions)
+                    {
+                        <a class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 bg-transparent" asp-controller="Booking" asp-action="Roster" asp-route-id="@s.Id">
+                            <div class="date-tile"><b>@s.StartDate.Day</b><span>@s.StartDate.ToString("MMM")</span></div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-semibold text-truncate">@s.CategoryName <span class="text-muted fw-normal">· @s.TrainerName</span></div>
+                                <div class="small text-muted">@s.StartDate.ToString("ddd h:mm tt") – @s.EndDate.ToString("h:mm tt")</div>
+                            </div>
+                            <div class="text-end"><partial name="_StatusBadge" model="s.Status" /><div class="small text-muted mt-1 tabular">@s.BookedCount / @s.Capacity booked</div></div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">Expiring within 7 days</div>
+            @if (Model.ExpiringSoon.Count == 0)
+            {
+                <div class="empty"><i class="bi bi-emoji-smile"></i><h3>No renewals due</h3>Nobody's membership ends this week.</div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var m in Model.ExpiringSoon)
+                    {
+                        <div class="list-group-item d-flex align-items-center gap-3 py-3 bg-transparent">
+                            <partial name="_Avatar" model='new AvatarModel(m.MemberName, null, "sm")' />
+                            <div class="flex-grow-1 min-w-0"><div class="fw-semibold text-truncate">@m.MemberName</div><div class="small text-muted">@m.PlanName · ends @m.EndDate.ToString("d MMM")</div></div>
+                            <span class="status status-warn">@m.RemainingDays d left</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Charts { }

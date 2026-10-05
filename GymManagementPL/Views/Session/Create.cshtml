@@ -1,0 +1,32 @@
+@model CreateSessionViewModel
+@{
+    ViewData["Title"] = "New session";
+    var trainers = (IReadOnlyList<TrainerSelectViewModel>)ViewBag.Trainers;
+    var categories = (IReadOnlyList<CategorySelectViewModel>)ViewBag.Categories;
+}
+<div class="page-header"><div>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Sessions</a></li><li class="breadcrumb-item active">Create</li></ol></nav>
+    <h1>New session</h1></div></div>
+<form asp-action="Create" method="post" novalidate>
+    
+    <div class="card form-narrow"><div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+        <div class="row g-3">
+            <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" rows="2" class="form-control" placeholder="What will this session cover?"></textarea><span asp-validation-for="Description"></span></div>
+            <div class="col-md-6"><label asp-for="CategoryId" class="form-label"></label><select asp-for="CategoryId" class="form-select"><option value="">Select…</option>@foreach (var c in categories) { <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@c.CategoryName</option> }</select><span asp-validation-for="CategoryId"></span></div>
+            <div class="col-md-6"><label asp-for="TrainerId" class="form-label"></label>
+                <select asp-for="TrainerId" class="form-select"><option value="">Select…</option>
+                @foreach (var t in trainers) { <option value="@t.Id" data-categories="@string.Join(",", t.CategoryIds)" selected="@(Model.TrainerId == t.Id)">@t.Name · @t.Specialty</option> }
+                </select><span asp-validation-for="TrainerId"></span>
+                <div class="form-text" id="trainerHint" hidden>Only trainers who can lead this category are shown.</div></div>
+            <div class="col-md-4"><label asp-for="StartDate" class="form-label"></label><input asp-for="StartDate" type="datetime-local" class="form-control" /><span asp-validation-for="StartDate"></span></div>
+            <div class="col-md-4"><label asp-for="EndDate" class="form-label"></label><input asp-for="EndDate" type="datetime-local" class="form-control" /><span asp-validation-for="EndDate"></span></div>
+            <div class="col-md-4"><label asp-for="Capacity" class="form-label"></label><input asp-for="Capacity" type="number" min="1" max="25" class="form-control" /><span asp-validation-for="Capacity"></span></div>
+        </div>
+    </div>
+    <div class="card-footer bg-transparent p-3 d-flex gap-2"><button type="submit" class="btn btn-primary">Create session</button><a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></div></div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/pages/session-form.js" asp-append-version="true"></script>
+}

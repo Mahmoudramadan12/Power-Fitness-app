@@ -1,0 +1,23 @@
+## .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.DotSettings.user
+TestResults/
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+## Secrets & local config - never commit these
+appsettings.*.local.json
+secrets.json
+.env
+*.pfx
+
+## Runtime data (uploaded member photos live here; back this folder up, don't commit it)
+GymManagementPL/MembersPictures/*
+!GymManagementPL/MembersPictures/.gitkeep

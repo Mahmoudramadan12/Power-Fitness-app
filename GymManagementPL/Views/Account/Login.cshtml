@@ -1,0 +1,51 @@
+@model LoginViewModel
+@inject IOptions<GymOptions> Gym
+@{
+    ViewData["Title"] = "Sign in";
+    Layout = "_AuthLayout";
+}
+<div class="auth">
+    <section class="auth-hero" aria-hidden="true">
+        <div class="brand p-0"><span class="brand-mark"><i class="bi bi-lightning-charge-fill"></i></span> @Gym.Value.Name</div>
+        <div>
+            <h2>Run your gym without the spreadsheets.</h2>
+            <ul>
+                <li><i class="bi bi-check2-circle"></i>Members, plans and memberships in one place</li>
+                <li><i class="bi bi-check2-circle"></i>Session scheduling with live capacity</li>
+                <li><i class="bi bi-check2-circle"></i>Attendance tracking and revenue at a glance</li>
+            </ul>
+        </div>
+        <small class="text-white-50">&copy; @DateTime.Now.Year @Gym.Value.Name</small>
+    </section>
+
+    <section class="auth-panel">
+        <div class="auth-box">
+            <div class="brand d-lg-none text-body px-0"><span class="brand-mark"><i class="bi bi-lightning-charge-fill"></i></span> @Gym.Value.Name</div>
+            <h1 class="h3 mb-1">Welcome back</h1>
+            <p class="text-muted mb-4">Sign in to the admin console.</p>
+
+            <form asp-action="Login" method="post" novalidate>
+                <input type="hidden" asp-for="ReturnUrl" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="username" autofocus placeholder="you@example.com" />
+                    <span asp-validation-for="Email"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <span asp-validation-for="Password"></span>
+                </div>
+                <div class="form-check mb-4">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label"></label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">Sign in</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

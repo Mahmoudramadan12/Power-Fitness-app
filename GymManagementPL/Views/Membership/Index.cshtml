@@ -1,0 +1,59 @@
+@model GymManagementBLL.Common.PagedList<MembershipViewModel>
+@{
+    ViewData["Title"] = "Memberships";
+    var query = (MembershipListQuery)ViewBag.Query;
+    var tabs = new (MembershipStatus? Status, string Label)[] { (MembershipStatus.Active, "Active"), (MembershipStatus.Upcoming, "Upcoming"), (MembershipStatus.Expired, "Expired"), (null, "All") };
+}
+<div class="page-header">
+    <div><h1>Memberships</h1><p class="lead">Who is subscribed to what.</p></div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> New membership</a>
+</div>
+
+<ul class="nav nav-tabs-pf mb-3" aria-label="Membership status">
+    @foreach (var (status, label) in tabs)
+    {
+        <li class="nav-item"><a class="nav-link @(query.Status == status ? "active" : "")" asp-action="Index" asp-route-status="@(status?.ToString() ?? "")" asp-route-search="@query.Search">@label</a></li>
+    }
+</ul>
+
+<div class="card table-card">
+    <form method="get" class="filter-bar" role="search">
+        <input type="hidden" name="status" value="@query.Status" />
+        <div class="search"><i class="bi bi-search"></i><input type="search" name="search" value="@query.Search" class="form-control" placeholder="Search member or plan" aria-label="Search memberships" /></div>
+        <button class="btn btn-soft" type="submit">Search</button>
+        @if (!string.IsNullOrEmpty(query.Search)) { <a class="btn btn-link" asp-action="Index" asp-route-status="@query.Status">Clear</a> }
+    </form>
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty"><i class="bi bi-card-checklist"></i><h3>No memberships here</h3></div>
+    }
+    else
+    {
+        <div class="table-responsive"><table class="table table-hover">
+            <thead><tr><th>Member</th><th>Plan</th><th>Period</th><th class="text-end">Paid (EGP)</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+            <tbody>
+            @foreach (var m in Model.Items)
+            {
+                <tr>
+                    <td><div class="cell-person"><partial name="_Avatar" model='new AvatarModel(m.MemberName, null, "sm")' />@if (User.IsInRole(RoleNames.SuperAdmin)) { <a asp-controller="Member" asp-action="Details" asp-route-id="@m.MemberId">@m.MemberName</a> } else { <span class="fw-semibold">@m.MemberName</span> }</div></td>
+                    <td>@m.PlanName</td>
+                    <td class="tabular">@m.StartDate.ToString("d MMM yy") – @m.EndDate.ToString("d MMM yy")
+                        @if (m.Status == MembershipStatus.Active) { <small class="d-block @(m.RemainingDays <= 7 ? "text-warning" : "text-muted")">@m.RemainingDays days left</small> }</td>
+                    <td class="text-end tabular">@m.PricePaid.ToString("N0")</td>
+                    <td><partial name="_StatusBadge" model="m.Status" /></td>
+                    <td class="row-actions">
+                        @if (m.Status != MembershipStatus.Expired)
+                        {
+                            <form asp-action="Cancel" asp-route-id="@m.MembershipId" method="post" class="d-inline"
+                                  data-confirm="@(m.Status == MembershipStatus.Upcoming ? $"Remove {m.MemberName}'s upcoming {m.PlanName} membership?" : $"End {m.MemberName}'s {m.PlanName} membership today? They will lose access immediately.")"
+                                  data-confirm-title="@(m.Status == MembershipStatus.Upcoming ? "Remove membership?" : "End membership?")" data-confirm-ok="@(m.Status == MembershipStatus.Upcoming ? "Remove" : "End membership")">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" data-no-loading>@(m.Status == MembershipStatus.Upcoming ? "Remove" : "End")</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody></table></div>
+    }
+    <partial name="_Pager" model="Model" />
+</div>

@@ -1,0 +1,16 @@
+@model AvatarModel
+@{
+    var sizeClass = Model.Size switch { "sm" => "avatar-sm", "lg" => "avatar-lg", "xl" => "avatar-xl", _ => "" };
+    var parts = (Model.Name ?? "?").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    var initials = parts.Length == 0 ? "?" : parts.Length == 1 ? parts[0][..1] : parts[0][..1] + parts[^1][..1];
+    var hash = 0;
+    foreach (var ch in Model.Name ?? "") hash = (hash * 31 + ch) & 0x7fffffff;
+}
+@if (!string.IsNullOrEmpty(Model.PhotoUrl))
+{
+    <img src="@Model.PhotoUrl" alt="@Model.Name" class="avatar @sizeClass" loading="lazy" />
+}
+else
+{
+    <span class="avatar av-@(hash % 6) @sizeClass" aria-hidden="true">@initials.ToUpperInvariant()</span>
+}

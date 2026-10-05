@@ -1,0 +1,34 @@
+@model IReadOnlyList<SessionViewModel>
+@{ ViewData["Title"] = "Bookings"; }
+<div class="page-header">
+    <div><h1>Bookings</h1><p class="lead">Live and upcoming sessions. Open a roster to book members or record attendance.</p></div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="card"><div class="empty"><i class="bi bi-calendar-x"></i><h3>No upcoming sessions</h3><a asp-controller="Session" asp-action="Create" class="btn btn-primary btn-sm mt-2">Schedule a session</a></div></div>
+}
+else
+{
+    var groups = Model.GroupBy(s => s.StartDate.Date).OrderBy(g => g.Key);
+    foreach (var day in groups)
+    {
+        <h2 class="h6 text-muted text-uppercase mt-4 mb-2" style="letter-spacing:.07em">@day.Key.ToString("dddd, d MMMM")</h2>
+        <div class="row g-3">
+        @foreach (var s in day)
+        {
+            <div class="col-md-6 col-xl-4">
+                <a class="card session-card text-decoration-none text-reset h-100 d-block" asp-action="Roster" asp-route-id="@s.Id">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div><div class="fw-semibold">@s.CategoryName</div><div class="small text-muted">@s.TrainerName</div></div>
+                        <partial name="_StatusBadge" model="s.Status" />
+                    </div>
+                    <div class="small text-muted mb-3"><i class="bi bi-clock"></i> @s.StartDate.ToString("h:mm tt") – @s.EndDate.ToString("h:mm tt")</div>
+                    <div class="meter @(s.IsFull ? "full" : s.FillPercent >= 75 ? "high" : "")" role="progressbar" aria-valuenow="@s.BookedCount" aria-valuemin="0" aria-valuemax="@s.Capacity" aria-label="Booked seats"><span style="width:@s.FillPercent%"></span></div>
+                    <div class="small mt-1 tabular @(s.IsFull ? "text-danger fw-semibold" : "text-muted")">@(s.IsFull ? "Full" : $"{s.AvailableSlots} spots left") · @s.BookedCount / @s.Capacity</div>
+                </a>
+            </div>
+        }
+        </div>
+    }
+}
